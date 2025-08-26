@@ -1,5 +1,6 @@
 package com.cmedhealth.flutter.optimalbytetask.ui.theme
 
+import androidx.activity.compose.BackHandler
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cmedhealth.flutter.optimalbytetask.widgets.ActionFAB
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +49,7 @@ import com.cmedhealth.flutter.optimalbytetask.utils.BillsUiState
 import com.cmedhealth.flutter.optimalbytetask.viewModel.BillsViewModel
 import com.cmedhealth.flutter.optimalbytetask.widgets.AddEditDialog
 import com.cmedhealth.flutter.optimalbytetask.widgets.ContentSection
+import com.cmedhealth.flutter.optimalbytetask.widgets.CustomIconButton
 import com.cmedhealth.flutter.optimalbytetask.widgets.FilterSection
 import java.text.SimpleDateFormat
 import java.util.*
@@ -70,15 +74,30 @@ fun BillsScreen(viewModel: BillsViewModel) {
     var showAddDialog by remember { mutableStateOf(false) }
     var editingSubscription by remember { mutableStateOf<Subscription?>(null) }
 
+    BackHandler(enabled = uiState.showConvertedView) {
+        viewModel.hideConvertedView()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Bills Tracker",
+                        if (uiState.showConvertedView) "Bills in BDT" else "Bills Tracker",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
+                },
+                navigationIcon = {
+                    if (uiState.showConvertedView) {
+                        @androidx.compose.runtime.Composable {
+                            CustomIconButton(
+                                icon = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                onClick = { viewModel.hideConvertedView() }
+                            )
+                        }
+                    } else null
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -87,11 +106,13 @@ fun BillsScreen(viewModel: BillsViewModel) {
             )
         },
         floatingActionButton = {
-            ActionFAB(
-                icon = Icons.Default.Add,
-                contentDescription = "Add subscription",
-                onClick = { showAddDialog = true }
-            )
+            if (!uiState.showConvertedView) {
+                ActionFAB(
+                    icon = Icons.Default.Add,
+                    contentDescription = "Add subscription",
+                    onClick = { showAddDialog = true }
+                )
+            }
         }
     ) { paddingValues ->
         Column(
@@ -100,21 +121,23 @@ fun BillsScreen(viewModel: BillsViewModel) {
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            FilterSection(
-                currentFilter = uiState.filterType,
-                onFilterChange = { viewModel.setFilter(it) }
-            )
+            if (!uiState.showConvertedView) {
+                FilterSection(
+                    currentFilter = uiState.filterType,
+                    onFilterChange = { viewModel.setFilter(it) }
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             ContentSection(
                 uiState = uiState,
                 onEdit = { editingSubscription = it },
-                onDelete = { viewModel.deleteSubscription(it) }
+                onDelete = { viewModel.deleteSubscription(it) },
+                onConvertToBDT = { viewModel.convertToBDTAndShow() }
             )
         }
 
-        // Dialogs
         if (showAddDialog) {
             AddEditDialog(
                 subscription = null,

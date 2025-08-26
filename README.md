@@ -52,8 +52,12 @@ MVVM Architecture implemented with ViewModel and Repository pattern.
 
 Coroutines for async data handling.
 
+Dark Mode handled
+
+Currency conversion API called and converted all currencies to BDT
+
 ⏳ Pending Features
-Data synchronization with a remote API for currency conversion and add.
+Unit Testing
 
 Unit & UI testing setup.
 

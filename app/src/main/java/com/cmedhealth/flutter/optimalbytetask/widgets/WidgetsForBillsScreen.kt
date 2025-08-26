@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 
 import androidx.compose.foundation.layout.size
@@ -40,6 +41,8 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -53,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import com.cmedhealth.flutter.optimalbytetask.model.ConvertedSubscription
 import com.cmedhealth.flutter.optimalbytetask.model.Subscription
 import com.cmedhealth.flutter.optimalbytetask.utils.BillsUiState
 import java.util.Date
@@ -315,7 +319,8 @@ fun FilterSection(
 fun ContentSection(
     uiState: BillsUiState,
     onEdit: (Subscription) -> Unit,
-    onDelete: (Subscription) -> Unit
+    onDelete: (Subscription) -> Unit,
+    onConvertToBDT: () -> Unit
 ) {
     when {
         uiState.isLoading -> {
@@ -356,16 +361,63 @@ fun ContentSection(
                 }
             }
         }
+        uiState.showConvertedView -> {
+            ConvertedSubscriptionsView(
+                convertedSubscriptions = uiState.convertedSubscriptions,
+            )
+        }
         else -> {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(uiState.subscriptions) { subscription ->
-                    SubscriptionCard(
-                        subscription = subscription,
-                        onEdit = { onEdit(subscription) },
-                        onDelete = { onDelete(subscription) }
-                    )
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    if (uiState.isLoadingConversion) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                            Text("Converting...")
+                        }
+                    } else {
+                        PrimaryButton(
+                            text = "Click to see the total",
+                            icon = Icons.Default.CurrencyExchange,
+                            onClick = onConvertToBDT
+                        )
+                    }
+                }
+
+                uiState.conversionError?.let { error ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = "Error: $error",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.subscriptions) { subscription ->
+                        SubscriptionCard(
+                            subscription = subscription,
+                            onEdit = { onEdit(subscription) },
+                            onDelete = { onDelete(subscription) }
+                        )
+                    }
                 }
             }
         }
@@ -489,7 +541,23 @@ fun AddEditDialog(
                 DropdownField(
                     value = currency,
                     label = "Currency",
-                    options = listOf("USD", "EUR", "GBP", "JPY", "CAD", "BDT"),
+                   options = listOf(
+                        "BDT", "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN",
+                "BAM", "BBD", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTN",
+                "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC", "CUP",
+                "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD",
+                "FKP", "FOK", "GBP", "GEL", "GGP", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD",
+                "HKD", "HNL", "HRK", "HTG", "HUF", "IDR", "ILS", "IMP", "INR", "IQD", "IRR",
+                "ISK", "JEP", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KID", "KMF", "KRW",
+                "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL",
+                "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR",
+                "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK",
+                "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD",
+                "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "SSP", "STN",
+                "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TVD", "TWD",
+                "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VES", "VND", "VUV", "WST", "XAF",
+                "XCD", "XCG", "XDR", "XOF", "XPF", "YER", "ZAR", "ZMW", "ZWL"
+                ),
                     leadingIcon = Icons.Default.AttachMoney,
                     onValueChange = { currency = it }
                 )
@@ -568,7 +636,6 @@ fun AddEditDialog(
     }
 }
 
-// ===== DATE PICKER COMPONENTS =====
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -604,5 +671,127 @@ fun DatePickerModal(
             state = datePickerState,
             showModeToggle = true
         )
+    }
+}
+
+@Composable
+fun ConvertedSubscriptionsView(
+    convertedSubscriptions: List<ConvertedSubscription>,
+    modifier: Modifier = Modifier
+) {
+    val totalBDT = convertedSubscriptions.sumOf { it.bdtAmount }
+
+    Column(modifier = modifier) {
+        // Header with back button and total
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Converted to BDT",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Total: ${String.format("%.2f", totalBDT)} BDT",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // List of converted subscriptions
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(convertedSubscriptions) { convertedSub ->
+                ConvertedSubscriptionCard(convertedSubscription = convertedSub)
+            }
+        }
+    }
+}
+
+@Composable
+fun ConvertedSubscriptionCard(
+    convertedSubscription: ConvertedSubscription
+) {
+    val subscription = convertedSubscription.subscription
+    val isOverdue = subscription.nextDueDate < System.currentTimeMillis()
+    val isDueSoon = subscription.nextDueDate <= System.currentTimeMillis() + (7 * 24 * 60 * 60 * 1000L)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                isOverdue -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                isDueSoon -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.surface
+            }
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = subscription.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Original: ${subscription.amount} ${subscription.currency}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    // Converted amount
+                    Text(
+                        text = "BDT: ${String.format("%.2f", convertedSubscription.bdtAmount)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    // Exchange rate info
+                    if (subscription.currency != "BDT") {
+                        Text(
+                            text = "Rate: 1 ${subscription.currency} = ${String.format("%.4f", 1.0 / convertedSubscription.exchangeRate)} BDT",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+
+                    Text(
+                        text = "${subscription.frequency} • Due: ${formatDate(subscription.nextDueDate)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
     }
 }

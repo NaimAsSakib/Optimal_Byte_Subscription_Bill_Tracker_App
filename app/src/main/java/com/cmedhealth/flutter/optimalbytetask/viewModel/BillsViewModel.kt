@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cmedhealth.flutter.optimalbytetask.model.ConvertedSubscription
 import com.cmedhealth.flutter.optimalbytetask.model.Subscription
 import com.cmedhealth.flutter.optimalbytetask.repository.BillsRepository
 import com.cmedhealth.flutter.optimalbytetask.utils.BillsUiState
@@ -49,7 +50,6 @@ class BillsViewModel(private val repository: BillsRepository) : ViewModel() {
         }
     }
 
-    // Public function to refresh the list manually
     fun refreshSubscriptions() {
         loadSubscriptions()
     }
@@ -73,5 +73,32 @@ class BillsViewModel(private val repository: BillsRepository) : ViewModel() {
             repository.deleteSubscription(subscription)
             refreshSubscriptions()
         }
+    }
+
+    fun convertToBDTAndShow() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingConversion = true, conversionError = null)
+
+            val result = repository.convertToBDT(_uiState.value.subscriptions)
+
+            if (result.isSuccess) {
+                val convertedList = result.getOrNull() ?: emptyList<ConvertedSubscription>()
+                _uiState.value = _uiState.value.copy(
+                    convertedSubscriptions = convertedList,
+                    isLoadingConversion = false,
+                    showConvertedView = true,
+                    conversionError = null
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingConversion = false,
+                    conversionError = result.exceptionOrNull()?.message ?: "Failed to convert currencies"
+                )
+            }
+        }
+    }
+
+    fun hideConvertedView() {
+        _uiState.value = _uiState.value.copy(showConvertedView = false)
     }
 }

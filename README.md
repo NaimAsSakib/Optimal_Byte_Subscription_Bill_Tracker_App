@@ -41,6 +41,11 @@ Navigation Compose → In-app navigation.
 implementation("androidx.navigation:navigation-compose:2.7.6")
 Material Icons Extended → Richer icon set.
 implementation("androidx.compose.material:material-icons-extended:1.5.4")
+Retrofit → API call, Json to Gson conversion
+implementation("com.squareup.retrofit2:retrofit:2.9.0")
+implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+Okhttp logger → Track API call/Request body, Response
+implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
 
 ✅ Completed Features

@@ -15,15 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.cmedhealth.flutter.optimalbytetask.ui.theme.BillsTrackerApp
-import com.cmedhealth.flutter.optimalbytetask.ui.theme.BillsTrackerTheme
-
+import com.cmedhealth.flutter.optimalbytetask.ui.theme.MyAppTheme
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            MyAppTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
